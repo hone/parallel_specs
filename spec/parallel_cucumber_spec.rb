@@ -35,13 +35,33 @@ describe ParallelCucumber do
     end
 
     describe "when on bundler 0.8" do
+      before(:each) do
+        File.stub!(:file?).with('Gemfile').and_return true
+      end
+
       describe "when no bundler_bin is specified" do
         before(:each) do
-          File.stub!(:file?).with('Gemfile').and_return true
+          File.stub!(:open).with('Gemfile').and_yield(StringIO.new(""))
         end
 
         it "should run bin/cucumber" do
           ParallelCucumber.should_receive(:open).with{|x,y| x =~ %r{bin/cucumber}}.and_return mock(:getc=>false)
+          ParallelCucumber.run_tests(['xxx'],1)
+        end
+      end
+
+      describe "when bundler_bin is specified" do
+        before(:each) do
+          gemfile = <<GEMFILE
+bin_path "gbin"
+
+gem 'foo'
+GEMFILE
+          File.stub!(:open).with('Gemfile').and_yield(StringIO.new(gemfile))
+        end
+
+        it "should run gbin/cucumber" do
+          ParallelCucumber.should_receive(:open).with{|x,y| x =~ %r{gbin/cucumber}}.and_return mock(:getc=>false)
           ParallelCucumber.run_tests(['xxx'],1)
         end
       end

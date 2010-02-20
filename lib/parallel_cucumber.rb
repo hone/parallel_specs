@@ -11,7 +11,19 @@ class ParallelCucumber < ParallelTests
     if File.file?(".bundle/environment.rb")
       "bundle exec cucumber"
     elsif File.file?('Gemfile')
-      "bin/cucumber"
+      dir = "bin"
+
+      File.open('Gemfile') do |file|
+        bin_path_line = file.readlines.find do |line|
+          /^bin_path/.match(line)
+        end
+        if bin_path_line
+          match_data = /^bin_path "(.+)"/.match(bin_path_line)
+          dir = match_data[1]
+        end
+      end
+
+      "#{dir}/cucumber"
     elsif File.file?("script/cucumber")
       "script/cucumber"
     else
