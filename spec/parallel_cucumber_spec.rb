@@ -6,6 +6,7 @@ describe ParallelCucumber do
   describe :run_tests do
     before(:each) do
       File.stub!(:file?).with('.bundle/environment.rb').and_return false
+      File.stub!(:file?).with('Gemfile').and_return false
       File.stub!(:file?).with('script/cucumber').and_return true
     end
 
@@ -26,10 +27,24 @@ describe ParallelCucumber do
       ParallelCucumber.run_tests(['xxx'],1).should =~ /\$LOAD_PATH << File/
     end
 
+
     it "runs bundle exec cucumber when on bundler 0.9" do
       File.stub!(:file?).with('.bundle/environment.rb').and_return true
       ParallelCucumber.should_receive(:open).with{|x,y| x =~ %r{bundle exec cucumber}}.and_return mock(:getc=>false)
       ParallelCucumber.run_tests(['xxx'],1)
+    end
+
+    describe "when on bundler 0.8" do
+      describe "when no bundler_bin is specified" do
+        before(:each) do
+          File.stub!(:file?).with('Gemfile').and_return true
+        end
+
+        it "should run bin/cucumber" do
+          ParallelCucumber.should_receive(:open).with{|x,y| x =~ %r{bin/cucumber}}.and_return mock(:getc=>false)
+          ParallelCucumber.run_tests(['xxx'],1)
+        end
+      end
     end
 
     it "runs script/cucumber when script/cucumber is found" do
@@ -39,7 +54,7 @@ describe ParallelCucumber do
 
     it "runs cucumber by default" do
       File.stub!(:file?).with('script/cucumber').and_return false
-      ParallelCucumber.should_receive(:open).with{|x,y| x !~ %r{(script/cucumber)|(bundle exec cucumber)}}.and_return mock(:getc=>false)
+      ParallelCucumber.should_receive(:open).with{|x,y| x !~ %r{(script/cucumber)|(bundle exec cucumber)|(bin/cucumber)}}.and_return mock(:getc=>false)
       ParallelCucumber.run_tests(['xxx'],1)
     end
   end

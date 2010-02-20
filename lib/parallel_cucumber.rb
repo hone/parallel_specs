@@ -10,6 +10,8 @@ class ParallelCucumber < ParallelTests
   def self.executable
     if File.file?(".bundle/environment.rb")
       "bundle exec cucumber"
+    elsif File.file?('Gemfile')
+      "bin/cucumber"
     elsif File.file?("script/cucumber")
       "script/cucumber"
     else
