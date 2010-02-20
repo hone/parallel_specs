@@ -11,6 +11,8 @@ class ParallelSpecs < ParallelTests
   def self.executable
     if File.file?(".bundle/environment.rb")
       "bundle exec spec"
+    elsif File.file?('Gemfile')
+      "#{find_bundler_08_dir}/spec"
     elsif File.file?("script/spec")
       "script/spec"
     else

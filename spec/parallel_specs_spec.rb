@@ -6,6 +6,7 @@ describe ParallelSpecs do
   describe :run_tests do
     before do
       File.stub!(:file?).with('.bundle/environment.rb').and_return false
+      File.stub!(:file?).with('Gemfile').and_return false
       File.stub!(:file?).with('script/spec').and_return true
       File.stub!(:file?).with('spec/parallel_spec.opts').and_return false
     end
@@ -38,6 +39,39 @@ describe ParallelSpecs do
       ParallelSpecs.run_tests(['xxx'],1)
     end
 
+    describe "when on bundler 0.8" do
+      before(:each) do
+        File.stub!(:file?).with('Gemfile').and_return true
+      end
+
+      describe "when no bundler_bin is specified" do
+        before(:each) do
+          File.stub!(:open).with('Gemfile').and_yield(StringIO.new(""))
+        end
+
+        it "should run bin/cucumber" do
+          ParallelSpecs.should_receive(:open).with{|x,y| x =~ %r{bin/spec}}.and_return mock(:getc=>false)
+          ParallelSpecs.run_tests(['xxx'],1)
+        end
+      end
+
+      describe "when bundler_bin is specified" do
+        before(:each) do
+          gemfile = <<GEMFILE
+bin_path "gbin"
+
+gem 'foo'
+GEMFILE
+          File.stub!(:open).with('Gemfile').and_yield(StringIO.new(gemfile))
+        end
+
+        it "should run gbin/cucumber" do
+          ParallelSpecs.should_receive(:open).with{|x,y| x =~ %r{gbin/spec}}.and_return mock(:getc=>false)
+          ParallelSpecs.run_tests(['xxx'],1)
+        end
+      end
+    end
+
     it "runs script/spec when script/spec can be found" do
       File.should_receive(:file?).with('script/spec').and_return true
       ParallelSpecs.should_receive(:open).with{|x,y| x =~ %r{script/spec}}.and_return mock(:getc=>false)
@@ -46,7 +80,7 @@ describe ParallelSpecs do
 
     it "runs spec when script/spec cannot be found" do
       File.stub!(:file?).with('script/spec').and_return false
-      ParallelSpecs.should_receive(:open).with{|x,y| x !~ %r{(script/spec)|(bundle exec spec)}}.and_return mock(:getc=>false)
+      ParallelSpecs.should_receive(:open).with{|x,y| x !~ %r{(script/spec)|(bundle exec spec)|(bin/spec)}}.and_return mock(:getc=>false)
       ParallelSpecs.run_tests(['xxx'],1)
     end
 
