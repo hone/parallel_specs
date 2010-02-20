@@ -108,6 +108,22 @@ class ParallelTests
     end
   end
 
+  def self.find_bundler_08_dir
+    dir = "bin"
+
+    File.open('Gemfile') do |file|
+      bin_path_line = file.readlines.find do |line|
+        /^bin_path/.match(line)
+      end
+      if bin_path_line
+        match_data = /^bin_path "(.+)"/.match(bin_path_line)
+        dir = match_data[1]
+      end
+    end
+
+    dir
+  end
+
   def self.find_tests(root)
     Dir["#{root}**/**/*_test.rb"]
   end
