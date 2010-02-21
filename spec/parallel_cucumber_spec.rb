@@ -47,6 +47,14 @@ describe ParallelCucumber do
       ParallelCucumber.should_receive(:open).with{|x,y| x =~ %r{script/cucumber -p default}}.and_return mock(:getc=>false)
       ParallelCucumber.run_tests(['xxx'],1,'-p default')
     end
+
+    it "should split options" do
+      ParallelCucumber.should_receive(:open).with{|x,y| x =~ %r{script/cucumber -p default}}.and_return mock(:getc=>false)
+      ParallelCucumber.run_tests(['xxx'],1,'-p default|-p default2')
+
+      ParallelCucumber.should_receive(:open).with{|x,y| x =~ %r{script/cucumber -p default2}}.and_return mock(:getc=>false)
+      ParallelCucumber.run_tests(['xxx'],2,'-p default|-p default2')
+    end
   end
 
   describe :find_results do
