@@ -113,4 +113,12 @@ class ParallelTests
   def self.find_tests(root)
     Dir["#{root}**/**/*_test.rb"]
   end
+
+  def self.parse_options(process_number, options)
+    if options.include?('|')
+      options.split('|')[process_number - 1]
+    else
+      options
+    end
+  end
 end
